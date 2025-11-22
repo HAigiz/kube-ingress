@@ -1,0 +1,42 @@
+version: "3"
+
+dotenv:
+  - .env
+
+tasks:
+
+  compile:
+    env:
+      GOOS: linux
+    cmds:
+      - go build -o ./bin/appapi ./app/api/
+      - go build -o ./bin/appinfo ./app/info/
+      - go build -o ./bin/applogin ./app/login/
+
+  build:
+    cmds:
+      - docker build --no-cache -f ./app/api/Dockerfile -t appapi:latest .
+      - docker build --no-cache -f ./app/info/Dockerfile -t appinfo:latest .
+      - docker build --no-cache -f ./app/login/Dockerfile -t applogin:latest .
+  
+  push:
+    cmds:
+      - docker push haigiz/appapi:latest 
+      - docker push haigiz/appinfo:latest 
+      - docker push haigiz/applogin:latest 
+
+
+  deploy:
+    cmds:
+      - kubectl apply -n sirius -f ./k8s/api/
+      - kubectl apply -n sirius -f ./k8s/info/
+      - kubectl apply -n sirius -f ./k8s/login/
+      - kubectl apply -n sirius -f ./k8s/ingress.yaml
+
+
+
+  release:
+    cmds:
+      - task: compile
+      - task: build
+      - task: deploy
